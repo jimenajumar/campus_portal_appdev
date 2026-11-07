@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'events.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -14,6 +15,7 @@ void main() {
   class _MyAppState extends State<MyApp> {
     final PageController _pageController = PageController();
     int _currentPage = 0;
+    DateTime _selectedDate = DateTime.now();
     Timer? _slideTimer;
     @override
     void initState() {
@@ -21,8 +23,10 @@ void main() {
       _slideTimer = Timer.periodic(
         const Duration(seconds: 4), (timer) {
           if (!
+          // ignore: curly_braces_in_flow_control_structures
           _pageController.hasClients) return;
-          _pageController.animateToPage((_currentPage + 1) % 4,
+          final nextPage = (_currentPage +1) % 4;
+          _pageController.animateToPage(nextPage,
           duration: const Duration(milliseconds: 500),
           curve: Curves.easeInOut,
           );
@@ -81,12 +85,23 @@ void main() {
           physics: const 
           NeverScrollableScrollPhysics(),
           padding: const EdgeInsets.all(4),
-          crossAxisSpacing: 5,
-          mainAxisSpacing: 5,
+          crossAxisSpacing: 9,
+          mainAxisSpacing: 9,
           childAspectRatio: 1.5,
           children: [
             _featureCard(Icons.calendar_month,'Schedule'),
-            _featureCard(Icons.event,'Events'),
+            _featureCard(
+              Icons.event,'Events',
+              onTap: () {
+                debugPrint('Events is working');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const EventsPage(),
+                  ),
+                );
+              }
+            ),
             _featureCard(Icons.campaign,'Announcements'),
             _featureCard(Icons.cloud,'Weather'),
             _featureCard(Icons.groups,'Clubs'),
@@ -127,16 +142,51 @@ void main() {
             ],
           ),
         ),
+        const SizedBox(height: 20),
+        const Text(
+          'Campus Calendar',
+            style: TextStyle(
+            fontSize: 20, fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [ BoxShadow( color: Colors.black12,
+            blurRadius: 6, offset: Offset(0, 3),
+          ),
+          ],
+          ),
+          child: CalendarDatePicker(
+            initialDate: _selectedDate,
+            firstDate: DateTime(2020),
+            lastDate: DateTime(2035),
+            onDateChanged: (date) {
+              setState(() {
+                _selectedDate = date;
+              });
+            },
+          ),
+        ),
         ],
         ),
         ),
       ),
       );
     }
-    Widget _featureCard(IconData icon, String title) {
-      return Container(
+    Widget _featureCard(IconData icon, String title, {
+      VoidCallback? onTap,
+    }) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius:
+        BorderRadius.circular(12),
+        child: Container(
         decoration: BoxDecoration(
-          color: Colors.blue, borderRadius: BorderRadius.circular(5),
+          color: Colors.white, borderRadius: BorderRadius.circular(5),
         ),
         child: Column(mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -144,11 +194,12 @@ void main() {
           const SizedBox(height: 2),
           Text(
             title, style: const TextStyle(
-              fontWeight: FontWeight.bold, fontSize: 11
+              fontWeight: FontWeight.bold, fontSize: 20
             ),
           ),
         ],
         ),
+      ),
       );
     }
     Widget _updateCard(IconData icon, String title, String description) {
